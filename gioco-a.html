@@ -807,3 +807,43 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+<script>
+/* --- nomi dei giocatori simulati, passati dal questionario (?p1= e ?p2=) ---
+   Aggiunto settembre 2026. Se i parametri non ci sono, non cambia nulla:
+   restano i nomi predefiniti. Serve a evitare che tutti i partecipanti
+   incontrino sempre la stessa coppia di giocatori. */
+(function () {
+var DEF_A = "riccardo_s", DEF_B = "federica.99";
+var a = DEF_A, b = DEF_B;
+try {
+var q = new URLSearchParams(location.search);
+if (q.get("p1")) { a = q.get("p1"); }
+if (q.get("p2")) { b = q.get("p2"); }
+} catch (e) {}
+if (a === DEF_A && b === DEF_B) { return; }
+if (typeof NICK !== "undefined" && NICK) { NICK.A = a; NICK.B = b; }
+function sost(n) {
+if (n.nodeType === 3) {
+var t = n.nodeValue;
+if (t.indexOf(DEF_A) > -1 || t.indexOf(DEF_B) > -1) {
+n.nodeValue = t.split(DEF_A).join(a).split(DEF_B).join(b);
+}
+return;
+}
+if (n.nodeType !== 1 || n.tagName === "SCRIPT" || n.tagName === "STYLE") { return; }
+for (var i = 0; i < n.childNodes.length; i++) { sost(n.childNodes[i]); }
+}
+function passa() { if (document.body) { sost(document.body); } }
+function avvia() {
+passa();
+var attesa = false;
+new MutationObserver(function () {
+if (attesa) { return; }
+attesa = true;
+setTimeout(function () { attesa = false; passa(); }, 60);
+}).observe(document.body, { childList: true, subtree: true, characterData: true });
+}
+if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", avvia); } else { avvia(); }
+})();
+</script>
