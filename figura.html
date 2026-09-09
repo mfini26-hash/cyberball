@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sessione</title>
+<style>
+/* ============================================================
+   COMPITO DELLA FIGURA (voodoo doll task)
+   Misura comportamentale di aggressivita' diretta a un bersaglio
+   specifico. Il partecipante inserisce da 0 a 51 spilli.
+   Registra: numero di spilli, zona del corpo, coordinate, ordine, tempi.
+   PARAMETRI URL: ?pid=  ?target=  ?max=
+   Il termine "voodoo" non compare mai a schermo.
+   ============================================================ */
+:root{
+  --legno-1:#d8c39a; --legno-2:#c9b087; --legno-3:#e3d2ad;
+  --stoffa:#968b7c; --arto:#5d564c; --cappello:#4b453d;
+  --toppa:#b3aa9a; --cuore:#ab2027; --filo:#3a342c; --inchiostro:#2b2620;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{
+  height:100%;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  color:var(--inchiostro);
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 60%),
+    repeating-linear-gradient(92deg,
+      var(--legno-1) 0px, var(--legno-2) 3px, var(--legno-3) 7px,
+      var(--legno-1) 12px, var(--legno-2) 19px, var(--legno-3) 26px,
+      var(--legno-1) 34px),
+    var(--legno-1);
+  overflow:hidden;
+}
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(60,40,15,.28) 100%);
+}
+.wrap{
+  height:100%; display:flex; flex-direction:column; align-items:center;
+  padding:clamp(10px,2vh,22px) 16px; position:relative; z-index:2;
+}
+.consegna{
+  max-width:680px; text-align:center;
+  background:rgba(255,252,245,.9);
+  border:1px solid rgba(80,60,30,.25);
+  border-radius:10px; padding:clamp(10px,1.6vh,16px) 20px;
+  box-shadow:0 3px 14px rgba(60,40,15,.18); flex-shrink:0;
+}
+.consegna h1{ font-size:clamp(1rem,2.4vh,1.25rem); font-weight:600; margin-bottom:6px; }
+.consegna p{ font-size:clamp(.82rem,1.9vh,.98rem); line-height:1.5; color:#4a4238; }
+.consegna strong{ color:var(--inchiostro); }
+.scena{
+  flex:1; min-height:0; width:100%;
+  display:flex; align-items:center; justify-content:center;
+  margin:clamp(6px,1.4vh,14px) 0;
+}
+svg#figura{
+  height:100%; max-height:100%; width:auto;
+  cursor:crosshair; touch-action:manipulation;
+  filter:drop-shadow(10px 16px 12px rgba(70,45,15,.35));
+}
+svg#figura.piena{ cursor:not-allowed; }
+.barra{
+  flex-shrink:0; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  justify-content:center; background:rgba(255,252,245,.92);
+  border:1px solid rgba(80,60,30,.25); border-radius:10px;
+  padding:10px 16px; box-shadow:0 3px 14px rgba(60,40,15,.18);
+}
+.contatore{ font-size:clamp(.85rem,2vh,1rem); font-variant-numeric:tabular-nums; }
+.contatore b{ font-size:1.25em; }
+.btn{
+  font:inherit; font-size:clamp(.8rem,1.9vh,.95rem);
+  border-radius:8px; padding:9px 18px; cursor:pointer;
+  border:1px solid transparent; transition:filter .15s, transform .06s;
+}
+.btn:active:not(:disabled){ transform:translateY(1px); }
+.btn-sec{ background:#efe7d8; border-color:rgba(80,60,30,.35); color:#4a4238; }
+.btn-sec:disabled{ opacity:.4; cursor:default; }
+.btn-pri{ background:#3f6b46; color:#fff; font-weight:600; box-shadow:0 2px 8px rgba(40,70,45,.35); }
+.btn:hover:not(:disabled){ filter:brightness(1.06); }
+.fine{
+  position:fixed; inset:0; z-index:50; display:none;
+  align-items:center; justify-content:center; background:rgba(35,28,18,.75);
+}
+.fine.on{ display:flex; }
+.fine .box{
+  background:#fffdf7; border-radius:14px; padding:34px 40px;
+  text-align:center; max-width:460px; box-shadow:0 12px 40px rgba(0,0,0,.4);
+}
+.fine h2{ font-size:1.2rem; margin-bottom:10px; }
+.fine p{ color:#5a5145; line-height:1.55; font-size:.95rem; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="consegna">
+    <h1>Prima di proseguire</h1>
+    <p id="istruzioni"></p>
+  </div>
+
+  <div class="scena">
+    <svg id="figura" viewBox="0 0 420 640" xmlns="http://www.w3.org/2000/svg" aria-label="Figura">
+      <defs>
+        <filter id="tessuto" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="n"/>
+          <feColorMatrix in="n" type="saturate" values="0" result="g"/>
+          <feComponentTransfer in="g" result="a">
+            <feFuncA type="linear" slope="0.22" intercept="0"/>
+          </feComponentTransfer>
+          <feComposite in="a" in2="SourceGraphic" operator="in" result="grana"/>
+          <feBlend in="SourceGraphic" in2="grana" mode="multiply"/>
+        </filter>
+        <linearGradient id="gArto" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#6f6759"/>
+          <stop offset="55%" stop-color="#5d564c"/>
+          <stop offset="100%" stop-color="#4c463d"/>
+        </linearGradient>
+        <linearGradient id="gTorso" x1="0.2" y1="0" x2="0.9" y2="1">
+          <stop offset="0%" stop-color="#a09585"/>
+          <stop offset="60%" stop-color="#968b7c"/>
+          <stop offset="100%" stop-color="#84796b"/>
+        </linearGradient>
+        <radialGradient id="gTesta" cx="0.38" cy="0.32" r="0.8">
+          <stop offset="0%" stop-color="#a89d8c"/>
+          <stop offset="70%" stop-color="#968b7c"/>
+          <stop offset="100%" stop-color="#82776a"/>
+        </radialGradient>
+      </defs>
+
+      <g id="doll" transform="rotate(-4 210 320)" filter="url(#tessuto)">
+
+        <g class="corpo" data-zona="gamba sinistra">
+          <rect x="140" y="430" width="46" height="180" rx="23" fill="url(#gArto)"/>
+          <path d="M150 452 L176 452" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".55"/>
+        </g>
+        <g class="corpo" data-zona="gamba destra">
+          <rect x="232" y="430" width="46" height="180" rx="23" fill="url(#gArto)"/>
+          <path d="M242 452 L268 452" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".55"/>
+        </g>
+
+        <g class="corpo" data-zona="braccio sinistro">
+          <rect x="36" y="258" width="140" height="42" rx="21" fill="url(#gArto)" transform="rotate(-4 106 279)"/>
+          <path d="M150 268 L150 292" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".55"/>
+        </g>
+        <g class="corpo" data-zona="braccio destro">
+          <rect x="244" y="258" width="140" height="42" rx="21" fill="url(#gArto)" transform="rotate(4 314 279)"/>
+          <path d="M270 268 L270 292" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".55"/>
+        </g>
+
+        <g class="corpo" data-zona="torso">
+          <path d="M210 214 C 262 214, 288 250, 288 306 C 288 376, 280 424, 262 442 C 246 458, 174 458, 158 442 C 140 424, 132 376, 132 306 C 132 250, 158 214, 210 214 Z" fill="url(#gTorso)"/>
+          <path d="M210 232 L210 318" stroke="#3a342c" stroke-width="2.4" stroke-dasharray="7 7" stroke-linecap="round" opacity=".6"/>
+          <ellipse cx="206" cy="382" rx="52" ry="46" fill="#b3aa9a" opacity=".95"/>
+          <ellipse cx="206" cy="382" rx="52" ry="46" fill="none" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="6 7" opacity=".6"/>
+          <path d="M247 300 c -6 -12, -25 -12, -25 3 c 0 13, 17 22, 25 30 c 8 -8, 25 -17, 25 -30 c 0 -15, -19 -15, -25 -3 Z" fill="#ab2027"/>
+          <path d="M247 300 c -6 -12, -25 -12, -25 3 c 0 13, 17 22, 25 30 c 8 -8, 25 -17, 25 -30 c 0 -15, -19 -15, -25 -3 Z" fill="none" stroke="#7d1218" stroke-width="1.6" opacity=".7"/>
+        </g>
+
+        <g class="corpo" data-zona="testa">
+          <circle cx="210" cy="150" r="66" fill="url(#gTesta)"/>
+          <circle cx="184" cy="140" r="19" fill="#b8272d"/>
+          <circle cx="184" cy="140" r="19" fill="none" stroke="#7d1218" stroke-width="1.6" opacity=".8"/>
+          <path d="M176 132 L192 148 M192 132 L176 148" stroke="#241f1a" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="238" cy="138" r="18" fill="#232b3c"/>
+          <circle cx="238" cy="138" r="18" fill="none" stroke="#12161f" stroke-width="1.6" opacity=".8"/>
+          <circle cx="232" cy="132" r="4.5" fill="#3c465c" opacity=".8"/>
+          <path d="M176 186 L246 184" stroke="#3a342c" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M184 178 L182 194 M200 177 L198 193 M216 177 L214 193 M232 177 L230 193" stroke="#3a342c" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+
+        <g class="corpo" data-zona="cappello">
+          <ellipse cx="206" cy="92" rx="72" ry="30" fill="#4b453d" transform="rotate(-9 206 92)"/>
+          <ellipse cx="212" cy="80" rx="46" ry="22" fill="#5a544b" transform="rotate(-9 212 80)" opacity=".85"/>
+        </g>
+
+      </g>
+
+      <g id="spilli"></g>
+    </svg>
+  </div>
+
+  <div class="barra">
+    <div class="contatore">Spilli inseriti: <b id="conta">0</b> <span id="massimo"></span></div>
+    <button class="btn btn-sec" id="annulla" disabled>Togli l'ultimo</button>
+    <button class="btn btn-pri" id="fatto">Ho finito</button>
+  </div>
+
+</div>
+
+<div class="fine" id="schermataFine">
+  <div class="box">
+    <h2>Grazie.</h2>
+    <p>Vai alla pagina successiva per proseguire con lo studio.</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var P = { pid:"", target:"", max:51 };
+try{
+  var q = new URLSearchParams(location.search);
+  P.pid    = q.get("pid") || "";
+  P.target = q.get("target") || "";
+  var m = parseInt(q.get("max"), 10);
+  if(!isNaN(m) && m > 0){ P.max = m; }
+}catch(e){}
+
+var chi = P.target ? ("<strong>" + P.target + "</strong>") : "uno degli altri giocatori";
+document.getElementById("istruzioni").innerHTML =
+  "La figura qui sotto rappresenta " + chi + ", con cui hai giocato poco fa. " +
+  "Se ti va, puoi scaricare su questa figura la tensione o il fastidio che hai provato " +
+  "durante il gioco, <strong>inserendo degli spilli</strong>: fai clic sul punto della figura " +
+  "in cui vuoi metterli. Puoi inserirne quanti vuoi, da nessuno fino a " + P.max +
+  ". Non c'e' una risposta giusta. Quando hai finito, premi «Ho finito».";
+document.getElementById("massimo").textContent = "su " + P.max;
+
+var svg      = document.getElementById("figura");
+var strato   = document.getElementById("spilli");
+var elConta  = document.getElementById("conta");
+var btnUndo  = document.getElementById("annulla");
+var btnFatto = document.getElementById("fatto");
+
+var spilli = [];
+var avvio  = performance.now();
+var chiuso = false;
+var COLORI = ["#c62828", "#1565c0", "#2e7d32", "#7d5a2b", "#ececec", "#e0a800"];
+var NS = "http://www.w3.org/2000/svg";
+
+function creaSpillo(x, y){
+  var g = document.createElementNS(NS, "g");
+  var ang = (-70 + Math.random() * 55) * Math.PI / 180;
+  var len = 34 + Math.random() * 16;
+  var x2 = x + Math.cos(ang) * len;
+  var y2 = y + Math.sin(ang) * len;
+  var colore = COLORI[Math.floor(Math.random() * COLORI.length)];
+
+  var ombra = document.createElementNS(NS, "line");
+  ombra.setAttribute("x1", x + 2); ombra.setAttribute("y1", y + 3);
+  ombra.setAttribute("x2", x2 + 2); ombra.setAttribute("y2", y2 + 3);
+  ombra.setAttribute("stroke", "rgba(40,25,10,.28)");
+  ombra.setAttribute("stroke-width", "3");
+  ombra.setAttribute("stroke-linecap", "round");
+  g.appendChild(ombra);
+
+  var ago = document.createElementNS(NS, "line");
+  ago.setAttribute("x1", x); ago.setAttribute("y1", y);
+  ago.setAttribute("x2", x2); ago.setAttribute("y2", y2);
+  ago.setAttribute("stroke", "#c7ccd1");
+  ago.setAttribute("stroke-width", "2.4");
+  ago.setAttribute("stroke-linecap", "round");
+  g.appendChild(ago);
+
+  var luce = document.createElementNS(NS, "line");
+  luce.setAttribute("x1", x); luce.setAttribute("y1", y);
+  luce.setAttribute("x2", x2); luce.setAttribute("y2", y2);
+  luce.setAttribute("stroke", "#ffffff");
+  luce.setAttribute("stroke-width", "0.9");
+  luce.setAttribute("stroke-linecap", "round");
+  luce.setAttribute("opacity", ".65");
+  g.appendChild(luce);
+
+  var testa = document.createElementNS(NS, "circle");
+  testa.setAttribute("cx", x2); testa.setAttribute("cy", y2);
+  testa.setAttribute("r", "6.5");
+  testa.setAttribute("fill", colore);
+  g.appendChild(testa);
+
+  var brillo = document.createElementNS(NS, "circle");
+  brillo.setAttribute("cx", x2 - 2); brillo.setAttribute("cy", y2 - 2.4);
+  brillo.setAttribute("r", "2");
+  brillo.setAttribute("fill", "#ffffff");
+  brillo.setAttribute("opacity", ".55");
+  g.appendChild(brillo);
+
+  strato.appendChild(g);
+  return g;
+}
+
+function puntoSvg(evt){
+  var r = svg.getBoundingClientRect();
+  var vb = svg.viewBox.baseVal;
+  var scala = Math.min(r.width / vb.width, r.height / vb.height);
+  var offX = (r.width  - vb.width  * scala) / 2;
+  var offY = (r.height - vb.height * scala) / 2;
+  return {
+    x: (evt.clientX - r.left - offX) / scala,
+    y: (evt.clientY - r.top  - offY) / scala
+  };
+}
+
+svg.addEventListener("click", function(evt){
+  if(chiuso) { return; }
+  if(spilli.length >= P.max) { return; }
+  var parte = evt.target.closest ? evt.target.closest("[data-zona]") : null;
+  if(!parte) { return; }
+  var p = puntoSvg(evt);
+  var nodo = creaSpillo(p.x, p.y);
+  spilli.push({
+    x: Math.round(p.x * 10) / 10,
+    y: Math.round(p.y * 10) / 10,
+    zona: parte.getAttribute("data-zona"),
+    ms: Math.round(performance.now() - avvio),
+    nodo: nodo
+  });
+  aggiorna();
+});
+
+btnUndo.addEventListener("click", function(){
+  if(chiuso || !spilli.length) { return; }
+  var ultimo = spilli.pop();
+  if(ultimo.nodo && ultimo.nodo.parentNode) { ultimo.nodo.parentNode.removeChild(ultimo.nodo); }
+  aggiorna();
+});
+
+function aggiorna(){
+  elConta.textContent = spilli.length;
+  btnUndo.disabled = spilli.length === 0;
+  if(spilli.length >= P.max){ svg.classList.add("piena"); } else { svg.classList.remove("piena"); }
+}
+
+btnFatto.addEventListener("click", function(){
+  if(chiuso) { return; }
+  chiuso = true;
+  btnFatto.disabled = true;
+  btnUndo.disabled = true;
+
+  var perZona = {};
+  spilli.forEach(function(s){ perZona[s.zona] = (perZona[s.zona] || 0) + 1; });
+
+  var dati = {
+    source: "figura",
+    pid: P.pid,
+    target: P.target,
+    spilli: spilli.length,
+    per_zona: perZona,
+    posizioni: spilli.map(function(s, i){
+      return { n: i + 1, x: s.x, y: s.y, zona: s.zona, ms: s.ms };
+    }),
+    ms_totale: Math.round(performance.now() - avvio)
+  };
+
+  try{ parent.postMessage(dati, "*"); }catch(e){}
+
+  document.getElementById("schermataFine").classList.add("on");
+});
+</script>
+</body>
+</html>
