@@ -7,68 +7,69 @@
 <style>
 /* ============================================================
    COMPITO DELLA FIGURA (voodoo doll task)
-   Misura comportamentale di aggressivita' diretta a un bersaglio
-   specifico. Il partecipante inserisce da 0 a 51 spilli.
-   Registra: numero di spilli, zona del corpo, coordinate, ordine, tempi.
+   Misura comportamentale di aggressivita' diretta a un bersaglio.
+   Il partecipante inserisce da 0 a 51 spilli.
+   Registra: numero di spilli, zona, coordinate, ordine, tempi.
    PARAMETRI URL: ?pid=  ?target=  ?max=
    Il termine "voodoo" non compare mai a schermo.
    ============================================================ */
-:root{
-  --legno-1:#d8c39a; --legno-2:#c9b087; --legno-3:#e3d2ad;
-  --stoffa:#968b7c; --arto:#5d564c; --cappello:#4b453d;
-  --toppa:#b3aa9a; --cuore:#ab2027; --filo:#3a342c; --inchiostro:#2b2620;
-}
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{
   height:100%;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-  color:var(--inchiostro);
-  background:
-    radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 60%),
-    repeating-linear-gradient(92deg,
-      var(--legno-1) 0px, var(--legno-2) 3px, var(--legno-3) 7px,
-      var(--legno-1) 12px, var(--legno-2) 19px, var(--legno-3) 26px,
-      var(--legno-1) 34px),
-    var(--legno-1);
+  color:#2b2620;
   overflow:hidden;
+  background:
+    repeating-linear-gradient(177deg,
+      rgba(110,72,30,.055) 0px, rgba(110,72,30,.055) 1px,
+      transparent 1px, transparent 5px),
+    repeating-linear-gradient(177deg,
+      #e2caa1 0px, #d9bf93 24px, #e9d7b2 50px, #d4b98d 82px, #e2caa1 118px),
+    #ddc59b;
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 220px 90px at 18% 26%, rgba(120,78,32,.16), transparent 70%),
+    radial-gradient(ellipse 150px 70px at 82% 68%, rgba(120,78,32,.13), transparent 70%),
+    radial-gradient(ellipse 110px 55px at 62% 12%, rgba(120,78,32,.10), transparent 70%);
 }
 body::after{
   content:""; position:fixed; inset:0; pointer-events:none;
-  background:radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(60,40,15,.28) 100%);
+  background:radial-gradient(ellipse at 50% 44%, transparent 38%, rgba(58,36,10,.32) 100%);
 }
 .wrap{
   height:100%; display:flex; flex-direction:column; align-items:center;
-  padding:clamp(10px,2vh,22px) 16px; position:relative; z-index:2;
+  padding:clamp(8px,1.8vh,20px) 16px; position:relative; z-index:2;
 }
 .consegna{
-  max-width:680px; text-align:center;
-  background:rgba(255,252,245,.9);
-  border:1px solid rgba(80,60,30,.25);
-  border-radius:10px; padding:clamp(10px,1.6vh,16px) 20px;
-  box-shadow:0 3px 14px rgba(60,40,15,.18); flex-shrink:0;
+  max-width:700px; text-align:center;
+  background:rgba(255,252,245,.93);
+  border:1px solid rgba(80,60,30,.28);
+  border-radius:10px; padding:clamp(9px,1.5vh,15px) 20px;
+  box-shadow:0 3px 16px rgba(60,40,15,.22); flex-shrink:0;
 }
-.consegna h1{ font-size:clamp(1rem,2.4vh,1.25rem); font-weight:600; margin-bottom:6px; }
-.consegna p{ font-size:clamp(.82rem,1.9vh,.98rem); line-height:1.5; color:#4a4238; }
-.consegna strong{ color:var(--inchiostro); }
+.consegna h1{ font-size:clamp(.95rem,2.2vh,1.18rem); font-weight:600; margin-bottom:5px; }
+.consegna p{ font-size:clamp(.8rem,1.8vh,.95rem); line-height:1.5; color:#4a4238; }
+.consegna strong{ color:#2b2620; }
 .scena{
   flex:1; min-height:0; width:100%;
   display:flex; align-items:center; justify-content:center;
-  margin:clamp(6px,1.4vh,14px) 0;
+  margin:clamp(4px,1.2vh,12px) 0;
 }
 svg#figura{
   height:100%; max-height:100%; width:auto;
   cursor:crosshair; touch-action:manipulation;
-  filter:drop-shadow(10px 16px 12px rgba(70,45,15,.35));
 }
 svg#figura.piena{ cursor:not-allowed; }
 .barra{
   flex-shrink:0; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-  justify-content:center; background:rgba(255,252,245,.92);
-  border:1px solid rgba(80,60,30,.25); border-radius:10px;
-  padding:10px 16px; box-shadow:0 3px 14px rgba(60,40,15,.18);
+  justify-content:center; background:rgba(255,252,245,.94);
+  border:1px solid rgba(80,60,30,.28); border-radius:10px;
+  padding:10px 16px; box-shadow:0 3px 16px rgba(60,40,15,.22);
 }
 .contatore{ font-size:clamp(.85rem,2vh,1rem); font-variant-numeric:tabular-nums; }
-.contatore b{ font-size:1.25em; }
+.contatore b{ font-size:1.3em; }
 .btn{
   font:inherit; font-size:clamp(.8rem,1.9vh,.95rem);
   border-radius:8px; padding:9px 18px; cursor:pointer;
@@ -81,7 +82,7 @@ svg#figura.piena{ cursor:not-allowed; }
 .btn:hover:not(:disabled){ filter:brightness(1.06); }
 .fine{
   position:fixed; inset:0; z-index:50; display:none;
-  align-items:center; justify-content:center; background:rgba(35,28,18,.75);
+  align-items:center; justify-content:center; background:rgba(35,28,18,.78);
 }
 .fine.on{ display:flex; }
 .fine .box{
@@ -102,78 +103,148 @@ svg#figura.piena{ cursor:not-allowed; }
   </div>
 
   <div class="scena">
-    <svg id="figura" viewBox="0 0 420 640" xmlns="http://www.w3.org/2000/svg" aria-label="Figura">
+    <svg id="figura" viewBox="0 0 460 680" xmlns="http://www.w3.org/2000/svg" aria-label="Figura">
       <defs>
-        <filter id="tessuto" x="-20%" y="-20%" width="140%" height="140%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="n"/>
-          <feColorMatrix in="n" type="saturate" values="0" result="g"/>
-          <feComponentTransfer in="g" result="a">
-            <feFuncA type="linear" slope="0.22" intercept="0"/>
-          </feComponentTransfer>
-          <feComposite in="a" in2="SourceGraphic" operator="in" result="grana"/>
-          <feBlend in="SourceGraphic" in2="grana" mode="multiply"/>
+        <!-- trama di juta -->
+        <pattern id="juta" width="6" height="6" patternUnits="userSpaceOnUse">
+          <rect width="6" height="6" fill="none"/>
+          <path d="M0 1.5 H6 M0 4.5 H6" stroke="rgba(45,36,24,.16)" stroke-width="1"/>
+          <path d="M1.5 0 V6 M4.5 0 V6" stroke="rgba(255,245,225,.13)" stroke-width="1"/>
+        </pattern>
+        <filter id="ombraDoll" x="-30%" y="-20%" width="170%" height="150%">
+          <feDropShadow dx="14" dy="20" stdDeviation="12" flood-color="#4a2f0d" flood-opacity=".42"/>
         </filter>
-        <linearGradient id="gArto" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#6f6759"/>
-          <stop offset="55%" stop-color="#5d564c"/>
-          <stop offset="100%" stop-color="#4c463d"/>
+        <linearGradient id="gArto" x1="0" y1="0" x2="0.15" y2="1">
+          <stop offset="0%" stop-color="#7a7264"/>
+          <stop offset="45%" stop-color="#635b50"/>
+          <stop offset="100%" stop-color="#453f37"/>
         </linearGradient>
-        <linearGradient id="gTorso" x1="0.2" y1="0" x2="0.9" y2="1">
-          <stop offset="0%" stop-color="#a09585"/>
-          <stop offset="60%" stop-color="#968b7c"/>
-          <stop offset="100%" stop-color="#84796b"/>
+        <linearGradient id="gTorso" x1="0.15" y1="0" x2="0.95" y2="1">
+          <stop offset="0%" stop-color="#a89c8a"/>
+          <stop offset="55%" stop-color="#978b7b"/>
+          <stop offset="100%" stop-color="#7b7062"/>
         </linearGradient>
-        <radialGradient id="gTesta" cx="0.38" cy="0.32" r="0.8">
-          <stop offset="0%" stop-color="#a89d8c"/>
-          <stop offset="70%" stop-color="#968b7c"/>
-          <stop offset="100%" stop-color="#82776a"/>
+        <radialGradient id="gTesta" cx="0.36" cy="0.3" r="0.85">
+          <stop offset="0%" stop-color="#b0a493"/>
+          <stop offset="62%" stop-color="#9a8e7e"/>
+          <stop offset="100%" stop-color="#7d7264"/>
         </radialGradient>
+        <linearGradient id="gCappello" x1="0.2" y1="0" x2="0.8" y2="1">
+          <stop offset="0%" stop-color="#575147"/>
+          <stop offset="100%" stop-color="#39342d"/>
+        </linearGradient>
       </defs>
 
-      <g id="doll" transform="rotate(-4 210 320)" filter="url(#tessuto)">
+      <g id="doll" transform="rotate(-5 230 340)" filter="url(#ombraDoll)">
 
+        <!-- ---------- gambe ---------- -->
         <g class="corpo" data-zona="gamba sinistra">
-          <rect x="140" y="430" width="46" height="180" rx="23" fill="url(#gArto)"/>
-          <path d="M150 452 L176 452" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".55"/>
+          <rect x="150" y="452" width="56" height="200" rx="28" fill="url(#gArto)"/>
+          <rect x="150" y="452" width="56" height="200" rx="28" fill="url(#juta)"/>
+          <rect x="150" y="452" width="56" height="200" rx="28" fill="none" stroke="#332e28" stroke-width="1.6" opacity=".55"/>
+          <path d="M160 476 H196" stroke="#2f2a23" stroke-width="2.4" stroke-dasharray="5 6" stroke-linecap="round" opacity=".6"/>
         </g>
         <g class="corpo" data-zona="gamba destra">
-          <rect x="232" y="430" width="46" height="180" rx="23" fill="url(#gArto)"/>
-          <path d="M242 452 L268 452" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".55"/>
+          <rect x="252" y="452" width="56" height="200" rx="28" fill="url(#gArto)"/>
+          <rect x="252" y="452" width="56" height="200" rx="28" fill="url(#juta)"/>
+          <rect x="252" y="452" width="56" height="200" rx="28" fill="none" stroke="#332e28" stroke-width="1.6" opacity=".55"/>
+          <path d="M262 476 H298" stroke="#2f2a23" stroke-width="2.4" stroke-dasharray="5 6" stroke-linecap="round" opacity=".6"/>
         </g>
 
-        <g class="corpo" data-zona="braccio sinistro">
-          <rect x="36" y="258" width="140" height="42" rx="21" fill="url(#gArto)" transform="rotate(-4 106 279)"/>
-          <path d="M150 268 L150 292" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".55"/>
+        <!-- ---------- braccia ---------- -->
+        <g class="corpo" data-zona="braccio sinistro" transform="rotate(-7 130 318)">
+          <rect x="34" y="292" width="164" height="52" rx="26" fill="url(#gArto)"/>
+          <rect x="34" y="292" width="164" height="52" rx="26" fill="url(#juta)"/>
+          <rect x="34" y="292" width="164" height="52" rx="26" fill="none" stroke="#332e28" stroke-width="1.6" opacity=".55"/>
+          <path d="M70 302 V334" stroke="#2f2a23" stroke-width="2.4" stroke-dasharray="5 6" stroke-linecap="round" opacity=".6"/>
         </g>
-        <g class="corpo" data-zona="braccio destro">
-          <rect x="244" y="258" width="140" height="42" rx="21" fill="url(#gArto)" transform="rotate(4 314 279)"/>
-          <path d="M270 268 L270 292" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="5 5" stroke-linecap="round" opacity=".55"/>
+        <g class="corpo" data-zona="braccio destro" transform="rotate(7 330 318)">
+          <rect x="262" y="292" width="164" height="52" rx="26" fill="url(#gArto)"/>
+          <rect x="262" y="292" width="164" height="52" rx="26" fill="url(#juta)"/>
+          <rect x="262" y="292" width="164" height="52" rx="26" fill="none" stroke="#332e28" stroke-width="1.6" opacity=".55"/>
+          <path d="M390 302 V334" stroke="#2f2a23" stroke-width="2.4" stroke-dasharray="5 6" stroke-linecap="round" opacity=".6"/>
         </g>
 
+        <!-- ---------- torso ---------- -->
         <g class="corpo" data-zona="torso">
-          <path d="M210 214 C 262 214, 288 250, 288 306 C 288 376, 280 424, 262 442 C 246 458, 174 458, 158 442 C 140 424, 132 376, 132 306 C 132 250, 158 214, 210 214 Z" fill="url(#gTorso)"/>
-          <path d="M210 232 L210 318" stroke="#3a342c" stroke-width="2.4" stroke-dasharray="7 7" stroke-linecap="round" opacity=".6"/>
-          <ellipse cx="206" cy="382" rx="52" ry="46" fill="#b3aa9a" opacity=".95"/>
-          <ellipse cx="206" cy="382" rx="52" ry="46" fill="none" stroke="#3a342c" stroke-width="2.2" stroke-dasharray="6 7" opacity=".6"/>
-          <path d="M247 300 c -6 -12, -25 -12, -25 3 c 0 13, 17 22, 25 30 c 8 -8, 25 -17, 25 -30 c 0 -15, -19 -15, -25 -3 Z" fill="#ab2027"/>
-          <path d="M247 300 c -6 -12, -25 -12, -25 3 c 0 13, 17 22, 25 30 c 8 -8, 25 -17, 25 -30 c 0 -15, -19 -15, -25 -3 Z" fill="none" stroke="#7d1218" stroke-width="1.6" opacity=".7"/>
+          <path id="pTorso" d="M229 236
+                   C 290 236, 320 276, 320 336
+                   C 320 412, 312 452, 292 470
+                   C 274 486, 184 486, 166 470
+                   C 146 452, 138 412, 138 336
+                   C 138 276, 168 236, 229 236 Z"
+                fill="url(#gTorso)"/>
+          <path d="M229 236
+                   C 290 236, 320 276, 320 336
+                   C 320 412, 312 452, 292 470
+                   C 274 486, 184 486, 166 470
+                   C 146 452, 138 412, 138 336
+                   C 138 276, 168 236, 229 236 Z"
+                fill="url(#juta)"/>
+          <path d="M229 236
+                   C 290 236, 320 276, 320 336
+                   C 320 412, 312 452, 292 470
+                   C 274 486, 184 486, 166 470
+                   C 146 452, 138 412, 138 336
+                   C 138 276, 168 236, 229 236 Z"
+                fill="none" stroke="#332e28" stroke-width="1.8" opacity=".5"/>
+          <!-- cucitura centrale -->
+          <path d="M229 256 L229 352" stroke="#2f2a23" stroke-width="2.6"
+                stroke-dasharray="8 8" stroke-linecap="round" opacity=".62"/>
+          <!-- toppa del ventre -->
+          <ellipse cx="224" cy="414" rx="58" ry="50" fill="#b6ad9c"/>
+          <ellipse cx="224" cy="414" rx="58" ry="50" fill="url(#juta)"/>
+          <ellipse cx="224" cy="414" rx="58" ry="50" fill="none"
+                   stroke="#2f2a23" stroke-width="2.4" stroke-dasharray="6 8" opacity=".62"/>
+          <!-- cuore -->
+          <path d="M272 322
+                   c -7 -14, -29 -14, -29 4
+                   c 0 15, 20 25, 29 34
+                   c 9 -9, 29 -19, 29 -34
+                   c 0 -18, -22 -18, -29 -4 Z"
+                fill="#b02730"/>
+          <path d="M272 322
+                   c -7 -14, -29 -14, -29 4
+                   c 0 15, 20 25, 29 34
+                   c 9 -9, 29 -19, 29 -34
+                   c 0 -18, -22 -18, -29 -4 Z"
+                fill="url(#juta)" opacity=".7"/>
+          <path d="M272 322
+                   c -7 -14, -29 -14, -29 4
+                   c 0 15, 20 25, 29 34
+                   c 9 -9, 29 -19, 29 -34
+                   c 0 -18, -22 -18, -29 -4 Z"
+                fill="none" stroke="#6f1016" stroke-width="1.8" opacity=".8"/>
         </g>
 
+        <!-- ---------- testa ---------- -->
         <g class="corpo" data-zona="testa">
-          <circle cx="210" cy="150" r="66" fill="url(#gTesta)"/>
-          <circle cx="184" cy="140" r="19" fill="#b8272d"/>
-          <circle cx="184" cy="140" r="19" fill="none" stroke="#7d1218" stroke-width="1.6" opacity=".8"/>
-          <path d="M176 132 L192 148 M192 132 L176 148" stroke="#241f1a" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="238" cy="138" r="18" fill="#232b3c"/>
-          <circle cx="238" cy="138" r="18" fill="none" stroke="#12161f" stroke-width="1.6" opacity=".8"/>
-          <circle cx="232" cy="132" r="4.5" fill="#3c465c" opacity=".8"/>
-          <path d="M176 186 L246 184" stroke="#3a342c" stroke-width="2.6" stroke-linecap="round"/>
-          <path d="M184 178 L182 194 M200 177 L198 193 M216 177 L214 193 M232 177 L230 193" stroke="#3a342c" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="230" cy="156" r="84" fill="url(#gTesta)"/>
+          <circle cx="230" cy="156" r="84" fill="url(#juta)"/>
+          <circle cx="230" cy="156" r="84" fill="none" stroke="#332e28" stroke-width="1.8" opacity=".5"/>
+          <!-- occhio sinistro: bottone rosso con croce -->
+          <circle cx="196" cy="144" r="25" fill="#b8272d"/>
+          <circle cx="196" cy="144" r="25" fill="url(#juta)" opacity=".6"/>
+          <circle cx="196" cy="144" r="25" fill="none" stroke="#71121a" stroke-width="2" opacity=".85"/>
+          <path d="M185 133 L207 155 M207 133 L185 155"
+                stroke="#221d18" stroke-width="4" stroke-linecap="round"/>
+          <!-- occhio destro: bottone scuro -->
+          <circle cx="266" cy="140" r="24" fill="#222a3a"/>
+          <circle cx="266" cy="140" r="24" fill="none" stroke="#0f131c" stroke-width="2" opacity=".85"/>
+          <circle cx="258" cy="132" r="6" fill="#4a566f" opacity=".75"/>
+          <!-- bocca cucita -->
+          <path d="M186 202 L278 199" stroke="#2f2a23" stroke-width="3" stroke-linecap="round"/>
+          <path d="M196 192 L193 212 M216 191 L213 211 M236 190 L233 210 M256 189 L253 209 M274 188 L271 208"
+                stroke="#2f2a23" stroke-width="2.8" stroke-linecap="round"/>
         </g>
 
+        <!-- ---------- cappello ---------- -->
         <g class="corpo" data-zona="cappello">
-          <ellipse cx="206" cy="92" rx="72" ry="30" fill="#4b453d" transform="rotate(-9 206 92)"/>
-          <ellipse cx="212" cy="80" rx="46" ry="22" fill="#5a544b" transform="rotate(-9 212 80)" opacity=".85"/>
+          <ellipse cx="222" cy="82" rx="92" ry="38" fill="url(#gCappello)" transform="rotate(-11 222 82)"/>
+          <ellipse cx="222" cy="82" rx="92" ry="38" fill="url(#juta)" transform="rotate(-11 222 82)" opacity=".8"/>
+          <ellipse cx="230" cy="66" rx="58" ry="27" fill="#5f594f" transform="rotate(-11 230 66)" opacity=".9"/>
+          <ellipse cx="222" cy="82" rx="92" ry="38" fill="none" stroke="#26221c" stroke-width="1.8"
+                   transform="rotate(-11 222 82)" opacity=".6"/>
         </g>
 
       </g>
@@ -215,7 +286,7 @@ document.getElementById("istruzioni").innerHTML =
   "Se ti va, puoi scaricare su questa figura la tensione o il fastidio che hai provato " +
   "durante il gioco, <strong>inserendo degli spilli</strong>: fai clic sul punto della figura " +
   "in cui vuoi metterli. Puoi inserirne quanti vuoi, da nessuno fino a " + P.max +
-  ". Non c'e' una risposta giusta. Quando hai finito, premi «Ho finito».";
+  ". Non c’è una risposta giusta. Quando hai finito, premi «Ho finito».";
 document.getElementById("massimo").textContent = "su " + P.max;
 
 var svg      = document.getElementById("figura");
@@ -227,30 +298,30 @@ var btnFatto = document.getElementById("fatto");
 var spilli = [];
 var avvio  = performance.now();
 var chiuso = false;
-var COLORI = ["#c62828", "#1565c0", "#2e7d32", "#7d5a2b", "#ececec", "#e0a800"];
+var COLORI = ["#c62828", "#1565c0", "#2e7d32", "#7d5a2b", "#efefef", "#e0a800"];
 var NS = "http://www.w3.org/2000/svg";
 
 function creaSpillo(x, y){
   var g = document.createElementNS(NS, "g");
-  var ang = (-70 + Math.random() * 55) * Math.PI / 180;
-  var len = 34 + Math.random() * 16;
+  var ang = (-72 + Math.random() * 58) * Math.PI / 180;
+  var len = 40 + Math.random() * 20;
   var x2 = x + Math.cos(ang) * len;
   var y2 = y + Math.sin(ang) * len;
   var colore = COLORI[Math.floor(Math.random() * COLORI.length)];
 
   var ombra = document.createElementNS(NS, "line");
-  ombra.setAttribute("x1", x + 2); ombra.setAttribute("y1", y + 3);
-  ombra.setAttribute("x2", x2 + 2); ombra.setAttribute("y2", y2 + 3);
-  ombra.setAttribute("stroke", "rgba(40,25,10,.28)");
-  ombra.setAttribute("stroke-width", "3");
+  ombra.setAttribute("x1", x + 3); ombra.setAttribute("y1", y + 4);
+  ombra.setAttribute("x2", x2 + 3); ombra.setAttribute("y2", y2 + 4);
+  ombra.setAttribute("stroke", "rgba(35,22,8,.30)");
+  ombra.setAttribute("stroke-width", "3.4");
   ombra.setAttribute("stroke-linecap", "round");
   g.appendChild(ombra);
 
   var ago = document.createElementNS(NS, "line");
   ago.setAttribute("x1", x); ago.setAttribute("y1", y);
   ago.setAttribute("x2", x2); ago.setAttribute("y2", y2);
-  ago.setAttribute("stroke", "#c7ccd1");
-  ago.setAttribute("stroke-width", "2.4");
+  ago.setAttribute("stroke", "#b9bfc6");
+  ago.setAttribute("stroke-width", "2.8");
   ago.setAttribute("stroke-linecap", "round");
   g.appendChild(ago);
 
@@ -258,22 +329,28 @@ function creaSpillo(x, y){
   luce.setAttribute("x1", x); luce.setAttribute("y1", y);
   luce.setAttribute("x2", x2); luce.setAttribute("y2", y2);
   luce.setAttribute("stroke", "#ffffff");
-  luce.setAttribute("stroke-width", "0.9");
+  luce.setAttribute("stroke-width", "1");
   luce.setAttribute("stroke-linecap", "round");
-  luce.setAttribute("opacity", ".65");
+  luce.setAttribute("opacity", ".7");
   g.appendChild(luce);
+
+  var ombraTesta = document.createElementNS(NS, "circle");
+  ombraTesta.setAttribute("cx", x2 + 2.5); ombraTesta.setAttribute("cy", y2 + 3);
+  ombraTesta.setAttribute("r", "7.5");
+  ombraTesta.setAttribute("fill", "rgba(35,22,8,.28)");
+  g.appendChild(ombraTesta);
 
   var testa = document.createElementNS(NS, "circle");
   testa.setAttribute("cx", x2); testa.setAttribute("cy", y2);
-  testa.setAttribute("r", "6.5");
+  testa.setAttribute("r", "7.5");
   testa.setAttribute("fill", colore);
   g.appendChild(testa);
 
   var brillo = document.createElementNS(NS, "circle");
-  brillo.setAttribute("cx", x2 - 2); brillo.setAttribute("cy", y2 - 2.4);
-  brillo.setAttribute("r", "2");
+  brillo.setAttribute("cx", x2 - 2.4); brillo.setAttribute("cy", y2 - 2.8);
+  brillo.setAttribute("r", "2.4");
   brillo.setAttribute("fill", "#ffffff");
-  brillo.setAttribute("opacity", ".55");
+  brillo.setAttribute("opacity", ".6");
   g.appendChild(brillo);
 
   strato.appendChild(g);
