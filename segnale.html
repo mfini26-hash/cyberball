@@ -10,6 +10,16 @@
    Misura comportamentale post-Cyberball (invio singolo).
    I valori in dB sono SIMBOLICI: il volume reale è limitato
    via software (vedi AudioManager, MAX_GAIN).
+
+   REVISIONE settembre 2026 (dopo incontro col relatore):
+   - scala 0–100 invece di 0–140
+   - rimosse le etichette verbali sotto il cursore (SILENZIO /
+     MASSIMO) e la classificazione a schermo: la misura deve
+     restare continua, non categoriale
+   - disattivato l'invio al Google Form (i dati vanno a SoSci)
+   - la parola "esperimento" sostituita con "studio"
+   - supporto ai parametri URL: pid, target, p1, p2
+   - registra se il cursore è stato effettivamente mosso
    ============================================================ */
 
 :root{
@@ -162,17 +172,6 @@ h1.title{
   margin:clamp(10px,2vmin,20px) 0;
   max-width:60ch;
 }
-.consent-check{
-  display:flex;align-items:flex-start;gap:12px;
-  margin:clamp(12px,2.5vmin,26px) 0;
-  cursor:pointer;text-transform:none;
-  color:var(--red);font-size:clamp(.8rem,1.9vmin,1rem);
-  max-width:60ch;text-align:left;
-}
-.consent-check input{
-  width:22px;height:22px;accent-color:var(--red-bright);
-  flex-shrink:0;margin-top:2px;cursor:pointer;
-}
 .field-label{
   color:var(--red-dim);letter-spacing:3px;
   font-size:clamp(.7rem,1.6vmin,.9rem);
@@ -211,6 +210,16 @@ input.text-input{
 
 .main-header{text-align:center;flex-shrink:0;}
 .main-header h1{font-size:clamp(1.6rem,5.5vmin,3.6rem);}
+
+.target-line{
+  text-transform:none;
+  color:var(--red);
+  font-size:clamp(.85rem,2.1vmin,1.25rem);
+  letter-spacing:2px;
+  text-align:center;
+  margin-top:clamp(8px,1.6vmin,16px);
+  min-height:1.4em;
+}
 
 .conn-indicator{
   display:flex;align-items:center;gap:10px;justify-content:center;
@@ -268,32 +277,18 @@ input[type=range]::-moz-range-thumb{
   cursor:grab;
 }
 input[type=range]:disabled{opacity:.45;cursor:not-allowed;}
-.ticks{
+/* estremi della scala: solo i due numeri, nessuna etichetta verbale */
+.slider-ends{
   display:flex;justify-content:space-between;
-  margin-top:6px;
-  color:var(--red-dark);
-  font-size:clamp(.5rem,1.1vmin,.7rem);letter-spacing:1px;
-}
-.slider-legend{
-  display:flex;justify-content:space-between;
-  margin-top:clamp(6px,1.2vmin,12px);
+  margin-top:8px;
   color:var(--red-dim);
-  font-size:clamp(.6rem,1.4vmin,.85rem);letter-spacing:3px;
-}
-.classification{
-  text-align:center;
-  margin-top:clamp(8px,1.8vmin,18px);
-  font-size:clamp(.9rem,2.4vmin,1.5rem);
-  letter-spacing:clamp(3px,1vmin,10px);
-  color:var(--red);
-  text-shadow:0 0 10px rgba(255,31,31,.6);
-  min-height:1.4em;
+  font-size:clamp(.7rem,1.6vmin,1rem);letter-spacing:2px;
 }
 
 /* sound waves animation */
 .waves{
   display:flex;gap:5px;justify-content:center;align-items:flex-end;
-  height:26px;margin-top:8px;visibility:hidden;
+  height:26px;margin-top:14px;visibility:hidden;
 }
 .waves span{
   width:5px;background:var(--red);box-shadow:0 0 6px var(--red);
@@ -309,10 +304,6 @@ input[type=range]:disabled{opacity:.45;cursor:not-allowed;}
 
 /* buttons zone */
 .btn-zone{width:min(900px,92%);display:flex;flex-direction:column;gap:clamp(10px,2vmin,20px);flex-shrink:0;}
-.sim-note{
-  text-align:center;color:var(--red-dark);
-  font-size:clamp(.55rem,1.2vmin,.72rem);letter-spacing:3px;
-}
 .tx-bar-wrap{
   width:100%;height:10px;border:1px solid var(--red-dark);
   background:#150202;display:none;
@@ -364,7 +355,6 @@ table.admin th{color:var(--red);background:#150202;letter-spacing:1px;}
 }
 .admin-stats b{color:var(--red);}
 
-/* incoming flash (riservato ad usi futuri / feedback visivo) */
 @keyframes redFlash{0%{opacity:.55}100%{opacity:0}}
 #flash{
   position:fixed;inset:0;background:var(--red-bright);
@@ -391,8 +381,8 @@ table.admin th{color:var(--red);background:#150202;letter-spacing:1px;}
 
 <div id="flash" aria-hidden="true"></div>
 
-<!-- ========== 0. EXPERIMENTER SETUP ========== -->
-<section id="setupScreen" class="screen active" aria-label="Experimenter setup">
+<!-- ========== 0. SETUP SPERIMENTATORE (saltato se c'è ?pid=) ========== -->
+<section id="setupScreen" class="screen active" aria-label="Setup sperimentatore">
   <div class="panel">
     <div class="narrow">
       <h1 class="title">SISTEMA DI ALLARME</h1>
@@ -407,14 +397,14 @@ table.admin th{color:var(--red);background:#150202;letter-spacing:1px;}
 </section>
 
 <!-- ========== 2. INITIALIZING ========== -->
-<section id="initScreen" class="screen" aria-label="System initializing">
+<section id="initScreen" class="screen" aria-label="Inizializzazione">
   <div class="panel">
     <h1 class="title" style="font-size:clamp(1.3rem,4vmin,2.4rem);">INIZIALIZZAZIONE SISTEMA<span class="blink">…</span></h1>
   </div>
 </section>
 
 <!-- ========== 3. CONNECTING TO PLAYERS ========== -->
-<section id="connectScreen" class="screen" aria-label="Connecting">
+<section id="connectScreen" class="screen" aria-label="Connessione">
   <div class="panel">
     <div class="narrow">
       <h1 class="title" style="font-size:clamp(1.2rem,3.6vmin,2.2rem);">CONNESSIONE AI GIOCATORI<span class="blink">…</span></h1>
@@ -425,38 +415,35 @@ table.admin th{color:var(--red);background:#150202;letter-spacing:1px;}
 </section>
 
 <!-- ========== 4. MAIN WARNING PANEL ========== -->
-<section id="mainScreen" class="screen" aria-label="Warning system main panel">
+<section id="mainScreen" class="screen" aria-label="Pannello principale">
   <div class="panel main-panel" id="mainPanel">
 
     <div class="main-header">
       <h1 class="title">SISTEMA DI<br>ALLARME</h1>
       <div class="hline" style="margin-bottom:0;"></div>
+      <div id="targetLine" class="target-line"></div>
       <div class="conn-indicator"><span class="dot" aria-hidden="true"></span> CONNESSIONE REMOTA STABILITA</div>
     </div>
 
     <div class="vol-block">
       <div class="vol-row">
         <div class="vol-label">VOLUME SEGNALE (DB):</div>
-        <div id="volValue" aria-live="polite">70</div>
+        <div id="volValue" aria-live="polite">50</div>
       </div>
       <div class="slider-wrap">
-        <input type="range" id="volSlider" min="0" max="140" step="1" value="70"
-               aria-label="Volume del segnale da 0 a 140"
-               aria-valuemin="0" aria-valuemax="140" aria-valuenow="70">
-        <div class="ticks">
-          <span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span><span>120</span><span>140</span>
-        </div>
-        <div class="slider-legend">
-          <span>SILENZIO</span><span>70 DB</span><span>MASSIMO</span>
+        <input type="range" id="volSlider" min="0" max="100" step="1" value="50"
+               aria-label="Volume del segnale da 0 a 100"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+        <div class="slider-ends">
+          <span>0</span><span>100</span>
         </div>
       </div>
-      <div id="classLabel" class="classification">ALTO</div>
       <div id="waves" class="waves" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
     </div>
 
     <div class="btn-zone">
       <button id="tryBtn" class="btn" aria-label="Prova segnale: ascolta un'anteprima del segnale">PROVA SEGNALE</button>
-      <button id="sendBtn" class="btn dark" aria-label="Invia segnale: invia il segnale ai giocatori">INVIA SEGNALE</button>
+      <button id="sendBtn" class="btn dark" aria-label="Invia segnale">INVIA SEGNALE</button>
       <div class="tx-bar-wrap" id="txBarWrap"><div class="tx-bar" id="txBar"></div></div>
       <div class="tx-msg" id="txMsg" aria-live="assertive"></div>
     </div>
@@ -465,27 +452,27 @@ table.admin th{color:var(--red);background:#150202;letter-spacing:1px;}
       <span>STATO: CONNESSO</span>
       <span>ID SESSIONE: <span id="sessId">----</span></span>
       <span>CANALE AUDIO: APERTO</span>
-      <span>riccardo_s: CONNESSO</span>
-      <span>federica.99: CONNESSA</span>
+      <span id="statusP1">giocatore 1: CONNESSO</span>
+      <span id="statusP2">giocatore 2: CONNESSO</span>
       <span>LINEA SICURA: ATTIVA</span>
     </div>
   </div>
 </section>
 
 <!-- ========== 5. COMPLETE ========== -->
-<section id="completeScreen" class="screen" aria-label="Experiment complete">
+<section id="completeScreen" class="screen" aria-label="Compito completato">
   <div class="panel">
     <div class="narrow">
-      <h1 class="title" style="font-size:clamp(1.6rem,5vmin,3.2rem);">ESPERIMENTO COMPLETATO</h1>
+      <h1 class="title" style="font-size:clamp(1.6rem,5vmin,3.2rem);">SEGNALE INVIATO</h1>
       <div class="hline"></div>
-      <p class="subtitle">SEGNALE CONSEGNATO — SESSIONE CHIUSA</p>
-      <p class="subtitle" style="margin-top:26px;">ATTENDI LO SPERIMENTATORE</p>
+      <p class="subtitle">SEGNALE CONSEGNATO — CANALE CHIUSO</p>
+      <p class="subtitle" style="margin-top:26px;text-transform:none;" id="completeHint">Vai alla pagina successiva per proseguire con lo studio.</p>
     </div>
   </div>
 </section>
 
-<!-- ========== 6. ADMIN / EXPERIMENTER (Ctrl+Shift+X) ========== -->
-<section id="adminScreen" class="screen" aria-label="Experimenter data panel">
+<!-- ========== 6. PANNELLO SPERIMENTATORE (Ctrl+Shift+X) ========== -->
+<section id="adminScreen" class="screen" aria-label="Pannello dati sperimentatore">
   <div class="panel">
     <h1 class="title" style="font-size:clamp(1.2rem,3.6vmin,2.2rem);">PANNELLO SPERIMENTATORE</h1>
     <div class="hline"></div>
@@ -495,7 +482,7 @@ table.admin th{color:var(--red);background:#150202;letter-spacing:1px;}
     </div>
     <div class="admin-btns">
       <button id="csvBtn" class="btn">SCARICA CSV</button>
-      <button id="restartBtn" class="btn dark">RIAVVIA ESPERIMENTO</button>
+      <button id="restartBtn" class="btn dark">RIAVVIA SESSIONE</button>
       <button id="closeAdminBtn" class="btn dark">TORNA AL SISTEMA</button>
       <button id="clearBtn" class="btn dark">ELIMINA TUTTI I DATI</button>
     </div>
@@ -508,24 +495,46 @@ table.admin th{color:var(--red);background:#150202;letter-spacing:1px;}
 <script>
 "use strict";
 /* ============================================================
-   WARNING SYSTEM — logic
-   Flusso: setup (ID) → consent → init → connecting → main
-           → send (unica misura) → complete.
+   WARNING SYSTEM — logica
+   Flusso: setup (ID) → init → connessione → pannello
+           → invio (unica misura) → completato.
    Pannello sperimentatore: Ctrl+Shift+X.
+
+   PARAMETRI URL
+     ?pid=...     codice partecipante (salta il setup)
+     ?target=...  nome del giocatore destinatario del segnale
+     ?p1=...      nome del primo giocatore simulato
+     ?p2=...      nome del secondo giocatore simulato
    ============================================================ */
+
+const SCALE_MAX = 100;      // scala simbolica 0–100
+const SCALE_DEFAULT = 50;   // posizione iniziale del cursore
+
+/* ---------------- Parametri URL ------------------------------ */
+const PARAMS = (function(){
+  const out = { pid:"", target:"", p1:"giocatore 1", p2:"giocatore 2" };
+  try{
+    const q = new URLSearchParams(location.search);
+    out.pid    = q.get("pid")    || "";
+    out.target = q.get("target") || "";
+    out.p1     = q.get("p1")     || out.p1;
+    out.p2     = q.get("p2")     || out.p2;
+  }catch(e){}
+  return out;
+})();
 
 /* ---------------- AudioManager ------------------------------
    Sirena generata con Web Audio API (nessun file esterno).
    SICUREZZA: il gain reale è SEMPRE limitato a MAX_GAIN,
-   indipendentemente dal valore simbolico (0–140) selezionato.
+   indipendentemente dal valore simbolico selezionato.
    Il numero mostrato NON corrisponde ai dB reali.             */
 const AudioManager = {
   ctx: null,
   muted: false,
   playing: false,
-  nodes: null,             // { carrier, lfo, lfoGain, filter, gain }
-  MAX_GAIN: 0.85,          // volume reale massimo (il numero in dB resta simbolico)
-  MIN_GAIN: 0.06,          // udibilità minima per valori > 0
+  nodes: null,
+  MAX_GAIN: 0.85,
+  MIN_GAIN: 0.06,
 
   init(){
     if(this.ctx) return;
@@ -542,11 +551,9 @@ const AudioManager = {
     }
   },
   gainFor(symbolicValue){
-    const norm = Math.min(1, Math.max(0, symbolicValue / 140));
+    const norm = Math.min(1, Math.max(0, symbolicValue / SCALE_MAX));
     return this.MIN_GAIN + norm * (this.MAX_GAIN - this.MIN_GAIN);
   },
-  /* Sirena CONTINUA: parte con startSiren e suona finché non
-     viene chiamato stopSiren. Sweep 650↔950 Hz via LFO. */
   startSiren(symbolicValue){
     if(this.muted || !this.ctx || symbolicValue <= 0 || this.playing) return false;
     this.resume();
@@ -556,14 +563,13 @@ const AudioManager = {
 
     const carrier = ctx.createOscillator();
     carrier.type = "sawtooth";
-    carrier.frequency.value = 800;          // frequenza centrale
+    carrier.frequency.value = 800;
 
-    // LFO che fa oscillare la frequenza tra ~650 e ~950 Hz
     const lfo = ctx.createOscillator();
     lfo.type = "sine";
-    lfo.frequency.value = 3;                // 3 cicli di sirena al secondo
+    lfo.frequency.value = 3;
     const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 150;               // profondità dello sweep
+    lfoGain.gain.value = 150;
     lfo.connect(lfoGain);
     lfoGain.connect(carrier.frequency);
 
@@ -574,7 +580,7 @@ const AudioManager = {
 
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(this.gainFor(symbolicValue), now + 0.03); // fade-in anti-click
+    gain.gain.linearRampToValueAtTime(this.gainFor(symbolicValue), now + 0.03);
 
     carrier.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
     carrier.start(now); lfo.start(now);
@@ -583,7 +589,6 @@ const AudioManager = {
     this.playing = true;
     return true;
   },
-  /* Aggiorna il volume in tempo reale se lo slider si muove durante la sirena */
   setLevel(symbolicValue){
     if(this.playing && this.nodes){
       const t = this.ctx.currentTime;
@@ -599,7 +604,7 @@ const AudioManager = {
     try{
       gain.gain.cancelScheduledValues(t);
       gain.gain.setValueAtTime(gain.gain.value, t);
-      gain.gain.linearRampToValueAtTime(0.0001, t + 0.05);  // fade-out anti-click
+      gain.gain.linearRampToValueAtTime(0.0001, t + 0.05);
       carrier.stop(t + 0.07); lfo.stop(t + 0.07);
     }catch(e){}
     this.nodes = null;
@@ -613,48 +618,35 @@ const AudioManager = {
 };
 
 /* ---------------- State & data ------------------------------ */
-const LS_KEY = "warning_system_sessions_v1";
+const LS_KEY = "warning_system_sessions_v2";
 const state = {
   participantId: "",
   sessionId: "",
+  target: PARAMS.target,
   previewCount: 0,
   previewValues: [],
   previewStartedAt: null,
   previewTotalMs: 0,
-  maxSliderValue: 70,
-  minSliderValue: 70,
+  maxSliderValue: SCALE_DEFAULT,
+  minSliderValue: SCALE_DEFAULT,
+  sliderTouched: false,   // il cursore è stato mosso almeno una volta?
   mainShownAt: null,
   sent: false,
   prevScreen: "setupScreen"
 };
 
-/* ---------------- Invio remoto dei dati ----------------------
-   Configurazione Google Form (opzionale ma consigliata per il
-   sito pubblico): crea un Google Form con campi corrispondenti,
-   poi incolla qui l'URL formResponse e gli entry ID.
-   Se FORM_ACTION è vuoto, l'invio remoto viene saltato e i dati
-   restano solo in localStorage.                                 */
-const REMOTE = {
-  FORM_ACTION: "https://docs.google.com/forms/d/e/1FAIpQLScgxxzIPg-KV3T7FJ2OHkMvlGImTYr0uA1SVVmLMJIDRYD1xQ/formResponse",
-  ENTRIES: {
-    participant_id:  "entry.294990756",
-    selected_value:  "entry.1397101142",
-    classification:  "entry.680255923",
-    preview_count:   "entry.1104582329",
-    preview_total_ms:"entry.837093650",
-    time_to_send_ms: "entry.384306018",
-    session_id:      "entry.1760979380"
-  }
-};
+/* ---------------- Invio remoto DISATTIVATO -------------------
+   In passato ogni invio veniva replicato su un Google Form.
+   Ora i dati vanno al questionario SoSci tramite postMessage,
+   quindi l'invio esterno è disattivato: un solo archivio dati,
+   nessuna copia su servizi terzi.
+   Per riattivarlo basterebbe reinserire l'URL in FORM_ACTION. */
+const REMOTE = { FORM_ACTION: "", ENTRIES: {} };
 function sendToRemote(rec){
   if(!REMOTE.FORM_ACTION) return;
   const data = new FormData();
-  Object.entries(REMOTE.ENTRIES).forEach(([k, entry])=>{
-    data.append(entry, rec[k]);
-  });
-  // no-cors: il browser invia senza leggere la risposta (normale per i Form)
-  fetch(REMOTE.FORM_ACTION, { method:"POST", mode:"no-cors", body:data })
-    .catch(()=>{ /* offline: i dati restano comunque in localStorage */ });
+  Object.entries(REMOTE.ENTRIES).forEach(([k, entry])=>{ data.append(entry, rec[k]); });
+  fetch(REMOTE.FORM_ACTION, { method:"POST", mode:"no-cors", body:data }).catch(()=>{});
 }
 
 function loadSessions(){
@@ -667,14 +659,6 @@ function saveSession(rec){
   try{ localStorage.setItem(LS_KEY, JSON.stringify(all)); }catch(e){}
 }
 
-function classify(v){
-  if(v===0) return "NESSUN SEGNALE";
-  if(v<=30) return "BASSO";
-  if(v<=60) return "MODERATO";
-  if(v<=90) return "ALTO";
-  if(v<=120) return "SEVERO";
-  return "MASSIMO";
-}
 function randSessionId(){
   const c = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
   let s = "";
@@ -696,10 +680,17 @@ function show(id){
 const $ = id => document.getElementById(id);
 const pid = $("pid"), setupBtn = $("setupBtn");
 const connLog = $("connLog");
-const volSlider = $("volSlider"), volValue = $("volValue"), classLabel = $("classLabel");
+const volSlider = $("volSlider"), volValue = $("volValue");
 const tryBtn = $("tryBtn"), sendBtn = $("sendBtn");
 const txBarWrap = $("txBarWrap"), txBar = $("txBar"), txMsg = $("txMsg");
 const waves = $("waves"), mainPanel = $("mainPanel");
+
+/* ---------------- Nomi dei giocatori simulati ---------------- */
+$("statusP1").textContent = PARAMS.p1 + ": CONNESSO";
+$("statusP2").textContent = PARAMS.p2 + ": CONNESSO";
+if(PARAMS.target){
+  $("targetLine").textContent = "Destinatario del segnale: " + PARAMS.target;
+}
 
 /* ---------------- 0. Setup ----------------------------------- */
 pid.addEventListener("input", ()=>{ setupBtn.disabled = pid.value.trim() === ""; });
@@ -707,26 +698,26 @@ setupBtn.addEventListener("click", ()=>{
   state.participantId = pid.value.trim().toUpperCase();
   state.sessionId = randSessionId();
   $("sessId").textContent = state.sessionId;
-  AudioManager.init();       // AudioContext creato dal gesto dello sperimentatore
+  AudioManager.init();
   AudioManager.resume();
   show("initScreen");
   setTimeout(()=>{ show("connectScreen"); runConnection(); }, 1500);
 });
 pid.addEventListener("keydown", e=>{ if(e.key==="Enter" && !setupBtn.disabled) setupBtn.click(); });
 
-/* ---------------- 3. Connection simulation ------------------- */
+/* ---------------- 3. Simulazione della connessione ----------- */
 function runConnection(){
   connLog.innerHTML = "";
   const lines = [
     "> ATTIVAZIONE LINEA SICURA ...",
     "> PROTOCOLLO DI CONNESSIONE: OK",
     "> RICERCA GIOCATORI DELLA SESSIONE PRECEDENTE ...",
-    "> riccardo_s ............ <span class='ok'>CONNESSO</span>",
-    "> federica.99 ........... <span class='ok'>CONNESSA</span>",
+    "> " + PARAMS.p1 + " ............ <span class='ok'>CONNESSO</span>",
+    "> " + PARAMS.p2 + " ............ <span class='ok'>CONNESSO</span>",
     "> CANALE AUDIO: <span class='ok'>APERTO</span>",
     "> <span class='ok'>TUTTI I GIOCATORI CONNESSI</span>"
   ];
-  const total = 1500 + Math.random()*1500;   // 1.5–3 s
+  const total = 1500 + Math.random()*1500;
   const step = total / lines.length;
   lines.forEach((l,i)=>{
     setTimeout(()=>{
@@ -745,18 +736,15 @@ function updateSlider(){
   const v = parseInt(volSlider.value, 10);
   volValue.textContent = v;
   volSlider.setAttribute("aria-valuenow", v);
-  volSlider.style.setProperty("--fill", (v/140*100) + "%");
-  classLabel.textContent = classify(v);
+  volSlider.style.setProperty("--fill", (v / SCALE_MAX * 100) + "%");
   state.maxSliderValue = Math.max(state.maxSliderValue, v);
   state.minSliderValue = Math.min(state.minSliderValue, v);
-  AudioManager.setLevel(v);   // aggiorna il volume se la sirena sta suonando
+  AudioManager.setLevel(v);
 }
-volSlider.addEventListener("input", updateSlider);
+volSlider.addEventListener("input", ()=>{ state.sliderTouched = true; updateSlider(); });
 updateSlider();
 
-/* ---------------- TRY WARNING (anteprima continua) -----------
-   Primo click: la sirena parte e suona in continuo.
-   Secondo click (STOP WARNING): la sirena si ferma.            */
+/* ---------------- PROVA SEGNALE (anteprima continua) --------- */
 function stopPreview(){
   AudioManager.stopSiren();
   if(state.previewStartedAt !== null){
@@ -772,11 +760,7 @@ function stopPreview(){
 tryBtn.addEventListener("click", ()=>{
   if(state.sent) return;
 
-  // se sta suonando → stop
-  if(AudioManager.playing){
-    stopPreview();
-    return;
-  }
+  if(AudioManager.playing){ stopPreview(); return; }
 
   const v = parseInt(volSlider.value, 10);
   state.previewCount++;
@@ -802,7 +786,7 @@ tryBtn.addEventListener("click", ()=>{
   }
 });
 
-/* ---------------- SEND WARNING (misura sperimentale) --------- */
+/* ---------------- INVIA SEGNALE (misura sperimentale) -------- */
 sendBtn.addEventListener("click", ()=>{
   if(state.sent) return;
   state.sent = true;
@@ -810,13 +794,11 @@ sendBtn.addEventListener("click", ()=>{
   const v = parseInt(volSlider.value, 10);
   const timeToSend = Math.round(performance.now() - state.mainShownAt);
 
-  // blocca interfaccia e ferma l'eventuale anteprima in corso
   stopPreview();
   volSlider.disabled = true;
   tryBtn.disabled = true;
   sendBtn.disabled = true;
 
-  // trasmissione simulata (~1 s) — nessun dato o suono inviato realmente
   txMsg.textContent = "TRASMISSIONE SEGNALE…";
   txBarWrap.style.display = "block";
   txBar.style.transition = "width 1s linear";
@@ -827,12 +809,12 @@ sendBtn.addEventListener("click", ()=>{
     $("flash").classList.add("go");
     setTimeout(()=> $("flash").classList.remove("go"), 450);
 
-    // registra la sessione (localStorage + eventuale invio remoto)
     const rec = {
       session_id: state.sessionId,
       participant_id: state.participantId,
+      target: state.target,
       selected_value: v,
-      classification: classify(v),
+      slider_touched: state.sliderTouched ? 1 : 0,
       preview_count: state.previewCount,
       preview_values: state.previewValues.join("|"),
       preview_total_ms: state.previewTotalMs,
@@ -844,11 +826,25 @@ sendBtn.addEventListener("click", ()=>{
     saveSession(rec);
     sendToRemote(rec);
 
+    /* invio al questionario (SoSci) */
+    try{
+      parent.postMessage({
+        source: "allarme",
+        pid: state.participantId,
+        target: state.target,
+        db: v,
+        toccato: state.sliderTouched ? 1 : 0,
+        prove: state.previewCount,
+        ms: timeToSend,
+        sessione: state.sessionId
+      }, "*");
+    }catch(e){}
+
     setTimeout(()=> show("completeScreen"), 1600);
   }, 1050);
 });
 
-/* ---------------- Admin panel (Ctrl+Shift+X) ------------------ */
+/* ---------------- Pannello sperimentatore (Ctrl+Shift+X) ----- */
 document.addEventListener("keydown", e=>{
   if(e.ctrlKey && e.shiftKey && e.code === "KeyX"){
     e.preventDefault();
@@ -862,7 +858,7 @@ document.addEventListener("keydown", e=>{
   }
 });
 
-const COLS = ["session_id","participant_id","selected_value","classification","preview_count","preview_values","preview_total_ms","max_slider_value","min_slider_value","time_to_send_ms","timestamp"];
+const COLS = ["session_id","participant_id","target","selected_value","slider_touched","preview_count","preview_values","preview_total_ms","max_slider_value","min_slider_value","time_to_send_ms","timestamp"];
 
 function renderAdmin(){
   const all = loadSessions();
@@ -917,17 +913,18 @@ $("csvBtn").addEventListener("click", ()=>{
   URL.revokeObjectURL(a.href);
 });
 
-/* restart: nuova sessione (i dati salvati restano) */
+/* riavvio: nuova sessione (i dati salvati restano) */
 $("restartBtn").addEventListener("click", ()=>{
   AudioManager.stopAll();
   Object.assign(state, {
     participantId:"", sessionId:"", previewCount:0, previewValues:[],
     previewStartedAt:null, previewTotalMs:0,
-    maxSliderValue:70, minSliderValue:70, mainShownAt:null, sent:false,
+    maxSliderValue:SCALE_DEFAULT, minSliderValue:SCALE_DEFAULT,
+    sliderTouched:false, mainShownAt:null, sent:false,
     prevScreen:"setupScreen"
   });
   pid.value = ""; setupBtn.disabled = true;
-  volSlider.disabled = false; volSlider.value = 70; updateSlider();
+  volSlider.disabled = false; volSlider.value = SCALE_DEFAULT; updateSlider();
   tryBtn.disabled = false; tryBtn.textContent = "PROVA SEGNALE";
   sendBtn.disabled = false;
   txMsg.textContent = ""; txBarWrap.style.display = "none";
@@ -973,51 +970,13 @@ document.addEventListener("fullscreenchange", ()=>{
 if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
   document.body.classList.add("reduce-motion");
 }
-</script>
-<script>
-/* --- avvio automatico + invio dati al questionario (aggiunto) --- */
-(function () {
-  var dbInviati = null, classeInviata = null, inviato = false, pid = "";
-  function avvia() {
-    try { pid = new URLSearchParams(location.search).get("pid") || ""; } catch (e) { pid = ""; }
-    if (pid) {
-      var inp = document.getElementById("pid");
-      var btn = document.getElementById("setupBtn");
-      if (inp && btn) {
-        inp.value = pid;
-        inp.dispatchEvent(new Event("input", { bubbles: true }));
-        inp.dispatchEvent(new Event("change", { bubbles: true }));
-        btn.click();
-      }
-    }
-    document.addEventListener("click", function (e) {
-      var t = e.target;
-      var isSend = t && (t.id === "sendBtn" || (t.closest && t.closest("#sendBtn")));
-      if (isSend) {
-        var vol = document.getElementById("volSlider");
-        var cls = document.getElementById("classLabel");
-        if (vol) dbInviati = vol.value;
-        if (cls) classeInviata = (cls.textContent || "").trim();
-      }
-    }, true);
-    setInterval(function () {
-      var fine = document.getElementById("completeScreen");
-      if (!inviato && fine && fine.classList.contains("active")) {
-        inviato = true;
-        var sid = document.getElementById("sessId");
-        try {
-          parent.postMessage({
-            source: "allarme",
-            pid: pid,
-            db: dbInviati,
-            classe: classeInviata,
-            sessione: sid ? (sid.textContent || "").trim() : ""
-          }, "*");
-        } catch (e) {}
-      }
-    }, 200);
-  }
-  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", avvia); } else { avvia(); }
+
+/* ---------------- Avvio automatico da ?pid= ------------------- */
+(function avvioAutomatico(){
+  if(!PARAMS.pid) return;
+  pid.value = PARAMS.pid;
+  setupBtn.disabled = false;
+  setupBtn.click();
 })();
 </script>
 </body>
